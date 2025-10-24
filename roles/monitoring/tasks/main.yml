@@ -1,0 +1,4 @@
+---
+- name: Echo ok
+  ansible.builtin.debug:
+    msg: Ok

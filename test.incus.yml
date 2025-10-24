@@ -1,0 +1,17 @@
+config:
+  security.nesting: true
+  cloud-init.user-data: |
+    #cloud-config
+    package_upgrade: true
+    packages:
+      - openssh-server
+      - python3
+      - sudo
+    users:
+      - name: ansible
+        gecos: Ansible User
+        groups: sudo
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMNpaTUYczL5Z3TBDG9KC+qLDfx9b9AAX9ZieKQy9VJ6 ansible"
