@@ -1,4 +1,10 @@
 ---
-- name: Echo ok
-  ansible.builtin.debug:
-    msg: Ok
+- name: Set up base system
+  ansible.builtin.import_tasks: system.yml
+  tags: system
+- name: Set up firewall
+  ansible.builtin.import_tasks: firewall.yml
+  tags: firewall
+- name: Set up containers
+  ansible.builtin.import_tasks: containers.yml
+  tags: containers

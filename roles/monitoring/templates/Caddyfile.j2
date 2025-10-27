@@ -1,0 +1,14 @@
+{
+	default_sni {{ domain_name }}
+}
+
+{% if domain_name == 'localhost' %}
+:443 {
+	tls internal {
+		on_demand
+	}
+{% else %}
+{{ domain_name }} {
+{% endif %}
+	respond "Ok"
+}
