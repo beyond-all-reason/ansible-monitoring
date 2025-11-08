@@ -29,6 +29,19 @@ Then test that it works for ansible:
 ```
 ansible dev -m shell -a 'uname -a'
 ```
+
+The test container runs a few different services, and depends on a few `*.bar-mon.local` domain names pointing at the incus container so they are independently routable from web browser. Easiest is to add a new entry in `/etc/hosts` like:
+
+```
+{incus_container_ip} ok.bar-mon.local
+```
+
+you can add/update it with:
+
+```
+ansible ,localhost -b -K -m lineinfile -a "path=/etc/hosts regexp='.*bar-mon.*' line='$(ansible-inventory --host test | jq -r '.ansible_host') ok.bar-mon.local'"
+```
+
 ### Usage
 
 Now you can use all the playbooks and roles as usual, just make sure you are targeting the `dev` inventory group or `test` host. For example:
