@@ -1,4 +1,10 @@
 ---
+- name: Create Quadlet file for podman network
+  containers.podman.podman_network:
+    name: priv
+    state: quadlet
+    quadlet_options:
+      - Options=com.docker.network.bridge.name=podmanpriv
 - name: Create caddy config directory
   ansible.builtin.file:
     path: /opt/caddy/config
@@ -23,6 +29,7 @@
       - "/opt/caddy/config:/etc/caddy:ro"
       - "caddy_data:/data"
       - "caddy_config:/config"
+    network: priv.network
     quadlet_options:
       - "AutoUpdate=registry"
       - "Pull=newer"
@@ -37,6 +44,40 @@
 - name: Start and enable Caddy service
   ansible.builtin.systemd_service:
     name: caddy.service
+    enabled: true
+    state: started
+    daemon_reload: true
+- name: Create dex config directory
+  ansible.builtin.file:
+    path: /opt/dex/config
+    state: directory
+    mode: "0755"
+- name: Write dex config
+  ansible.builtin.template:
+    src: dex.config.yaml.j2
+    dest: /opt/dex/config/config.docker.yaml
+    mode: "0644"
+  notify: Restart Dex
+- name: Set up Dex container
+  containers.podman.podman_container:
+    name: dex
+    state: quadlet
+    image: docker.io/dexidp/dex:v2.44.0-distroless
+    volumes:
+      - "/opt/dex/config:/etc/dex:ro"
+      - "dex_data:/var/dex/"
+    network: priv.network
+    quadlet_options:
+      - "AutoUpdate=registry"
+      - "Pull=newer"
+      - "UserNS=auto"
+      - |
+        [Install]
+        WantedBy=default.target
+  notify: Restart Dex
+- name: Start and enable Dex service
+  ansible.builtin.systemd_service:
+    name: dex.service
     enabled: true
     state: started
     daemon_reload: true

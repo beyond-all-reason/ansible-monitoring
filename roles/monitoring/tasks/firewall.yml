@@ -7,7 +7,7 @@
   community.general.ufw:
     rule: allow
     route: true
-    interface_out: podman0
+    interface_out: podmanpriv
     proto: "{{ item.proto }}"
     to_port: "{{ item.port }}"
   loop:

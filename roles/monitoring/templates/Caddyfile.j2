@@ -5,3 +5,7 @@
 {{ domain_name_ok }} {
 	respond "Ok"
 }
+
+{{ domain_name_dex }} {
+    reverse_proxy dex.dns.podman:5556
+}
