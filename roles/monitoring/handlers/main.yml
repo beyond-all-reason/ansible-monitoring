@@ -11,3 +11,7 @@
   ansible.builtin.systemd_service:
     name: dex.service
     state: restarted
+- name: Restart Grafana
+  ansible.builtin.systemd_service:
+    name: grafana.service
+    state: restarted

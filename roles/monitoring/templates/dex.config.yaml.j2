@@ -8,10 +8,17 @@ storage:
   config:
     file: /var/dex/dex.db
 
+staticClients:
+- id: "{{ grafana_oauth_client_id }}"
+  secret: "{{ grafana_oauth_client_secret }}"
+  name: "Grafana"
+  redirectURIs:
+  - "https://{{ domain_name_grafana }}/login/generic_oauth"
+
 enablePasswordDB: true
 
 staticPasswords:
-  - email: "admin@example.com"
+  - email: "admin@local"
     # bcrypt hash of the string "password"
     hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
     username: "admin"

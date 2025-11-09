@@ -1,0 +1,29 @@
+instance_name = BAR
+
+[server]
+root_url = https://{{ domain_name_grafana }}/
+
+[database]
+type = sqlite3
+
+[security]
+disable_initial_admin_creation = true
+cookie_secure = true
+
+[auth]
+disable_login_form = true
+
+[auth.generic_oauth]
+name = Dex
+enabled = true
+client_id = {{ grafana_oauth_client_id }}
+client_secret = {{ grafana_oauth_client_secret }}
+scopes = openid profile email groups
+auth_url = https://{{ domain_name_dex }}/auth
+token_url = http://dex.dns.podman:5556/token
+api_url = http://dex.dns.podman:5556/userinfo
+use_pkce = true
+role_attribute_strict = true
+role_attribute_path = email == 'admin@local' && 'Admin' || 'None'
+auto_login = true
+allow_sign_up = true

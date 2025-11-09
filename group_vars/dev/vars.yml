@@ -1,3 +1,6 @@
 ---
 domain_name_ok: "ok.bar-mon.local"
 domain_name_dex: "id.bar-mon.local"
+domain_name_grafana: "grafana.bar-mon.local"
+grafana_oauth_client_id: "grafana"
+grafana_oauth_client_secret: "393821bc1fa24c713fa637cba343f156265a55dd"

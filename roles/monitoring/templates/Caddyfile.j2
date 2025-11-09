@@ -9,3 +9,7 @@
 {{ domain_name_dex }} {
     reverse_proxy dex.dns.podman:5556
 }
+
+{{ domain_name_grafana }} {
+    reverse_proxy grafana.dns.podman:3000
+}
