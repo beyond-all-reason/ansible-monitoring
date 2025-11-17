@@ -11,6 +11,7 @@
       - acl # for ansible become
       - curl
       - htop
+      - less
       - man
       - nano
       - podman
@@ -27,11 +28,10 @@
       # We set iptables driver so it plays well with ufw that also uses iptables
       firewall_driver = "iptables"
 - name: Configure uig/gid mapping ranges
-  ansible.builtin.blockinfile:
+  ansible.builtin.lineinfile:
     path: "{{ item }}"
-    block: |
-      root:10000000:10000000
-      containers:20000000:10000000
+    regexp: "^containers:"
+    line: containers:10000000:10000000
   loop:
     - /etc/subgid
     - /etc/subuid

@@ -1,5 +1,8 @@
 config:
+  # we use podman inside incus container
   security.nesting: true
+  # privalaved needed to be able to use filesystem idmap
+  security.privileged: true
   cloud-init.user-data: |
     #cloud-config
     package_upgrade: true
