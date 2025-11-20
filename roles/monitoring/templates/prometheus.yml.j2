@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 60s
+scrape_configs:
+- job_name: grafana
+  static_configs:
+  - targets:
+    - grafana.dns.podman:3000
+- job_name: caddy
+  static_configs:
+  - targets:
+    - caddy.dns.podman:2019
+- job_name: dex
+  static_configs:
+  - targets:
+    - dex.dns.podman:5558
+- job_name: victoriametrics
+  static_configs:
+  - targets:
+    - victoriametrics.dns.podman:8428

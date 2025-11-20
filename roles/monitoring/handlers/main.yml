@@ -15,3 +15,7 @@
   ansible.builtin.systemd_service:
     name: grafana.service
     state: restarted
+- name: Restart VictoriaMetrics
+  ansible.builtin.systemd_service:
+    name: victoriametrics.service
+    state: restarted

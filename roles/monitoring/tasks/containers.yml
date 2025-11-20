@@ -5,6 +5,8 @@
     state: quadlet
     quadlet_options:
       - Options=com.docker.network.bridge.name=podmanpriv
+
+# Caddy
 - name: Create caddy config directory
   ansible.builtin.file:
     path: /opt/caddy/config
@@ -47,6 +49,8 @@
     enabled: true
     state: started
     daemon_reload: true
+
+# Dex
 - name: Create dex config directory
   ansible.builtin.file:
     path: /opt/dex/config
@@ -81,6 +85,8 @@
     enabled: true
     state: started
     daemon_reload: true
+
+# Grafana
 - name: Create grafana config directory
   ansible.builtin.file:
     path: /opt/grafana/config
@@ -112,6 +118,43 @@
 - name: Start and enable Grafana service
   ansible.builtin.systemd_service:
     name: grafana.service
+    enabled: true
+    state: started
+    daemon_reload: true
+
+# VictoriaMetrics
+- name: Create VictoriaMetrics config directory
+  ansible.builtin.file:
+    path: /opt/victoriametrics/config
+    state: directory
+    mode: "0755"
+- name: Write VictoriaMetrics scrape config
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /opt/victoriametrics/config/prometheus.yml
+    mode: "0644"
+  notify: Restart VictoriaMetrics
+- name: Set up VictoriaMetrics container
+  containers.podman.podman_container:
+    name: victoriametrics
+    state: quadlet
+    image: docker.io/victoriametrics/victoria-metrics:v1.129.1
+    volumes:
+      - "/opt/victoriametrics/config:/config:ro"
+      - "victoriametrics_data:/data:idmap"
+    command: -storageDataPath=/data -promscrape.config=/config/prometheus.yml
+    network: priv.network
+    quadlet_options:
+      - "AutoUpdate=registry"
+      - "Pull=newer"
+      - "UserNS=auto"
+      - |
+        [Install]
+        WantedBy=default.target
+  notify: Restart VictoriaMetrics
+- name: Start and enable VictoriaMetrics service
+  ansible.builtin.systemd_service:
+    name: victoriametrics.service
     enabled: true
     state: started
     daemon_reload: true

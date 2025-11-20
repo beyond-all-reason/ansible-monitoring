@@ -1,5 +1,9 @@
 {
 	default_sni {{ domain_name_ok }}
+	admin 0.0.0.0:2019
+	metrics {
+		per_host
+	}
 }
 
 {{ domain_name_ok }} {
@@ -12,4 +16,12 @@
 
 {{ domain_name_grafana }} {
     reverse_proxy grafana.dns.podman:3000
+}
+
+{{ domain_name_victoriametrics }} {
+    basic_auth {
+		# Username "metics", password "metrics"
+		metrics $2y$14$kzhgGvaDcRZwAKY5uZZVquOedyYXgPyJ66CejiHkuH5S6Km/jwY5K
+	}
+    reverse_proxy victoriametrics.dns.podman:8428
 }
