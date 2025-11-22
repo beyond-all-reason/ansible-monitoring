@@ -1,5 +1,4 @@
 ---
-domain_name_ok: "ok.bar-mon.local"
 domain_name_dex: "id.bar-mon.local"
 domain_name_grafana: "grafana.bar-mon.local"
 domain_name_victoriametrics: "metrics.bar-mon.local"
