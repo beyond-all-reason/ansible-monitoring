@@ -80,15 +80,24 @@
     daemon_reload: true
 
 # Grafana
-- name: Create grafana config directory
+- name: Create grafana config directories
   ansible.builtin.file:
-    path: /opt/grafana/config
+    path: "/opt/grafana/{{ item }}"
     state: directory
     mode: "0755"
+  loop:
+    - "config"
+    - "config/provisioning/datasources"
 - name: Write grafana config
   ansible.builtin.template:
     src: grafana.ini.j2
     dest: /opt/grafana/config/grafana.ini
+    mode: "0644"
+  notify: Restart Grafana
+- name: Write grafana datasources
+  ansible.builtin.template:
+    src: datasources.yml.j2
+    dest: /opt/grafana/config/provisioning/datasources/datasources.yml
     mode: "0644"
   notify: Restart Grafana
 - name: Set up Grafana container
