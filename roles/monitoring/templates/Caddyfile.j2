@@ -1,9 +1,12 @@
 {
 	default_sni {{ domain_name_grafana }}
-	admin 0.0.0.0:2019
 	metrics {
 		per_host
 	}
+}
+
+:2020 {
+	metrics
 }
 
 {{ domain_name_dex }} {
