@@ -23,3 +23,7 @@
   ansible.builtin.systemd_service:
     name: victoriametrics.service
     state: restarted
+- name: Restart vector
+  ansible.builtin.systemd:
+    name: vector
+    state: restarted

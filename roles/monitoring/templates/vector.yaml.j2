@@ -1,0 +1,18 @@
+api:
+  enabled: true
+sources:
+  host_metrics:
+    type: host_metrics
+    scrape_interval_secs: 15
+    filesystem:
+      mountpoints:
+        excludes:
+          - /var/lib/containers/storage/*
+sinks:
+  victoria_metrics:
+    type: prometheus_remote_write
+    endpoint: http://victoriametrics.dns.podman:8428/api/v1/write
+    healthcheck:
+      enabled: false
+    inputs:
+      - host_metrics

@@ -8,3 +8,6 @@
 - name: Set up containers
   ansible.builtin.import_tasks: containers.yml
   tags: containers
+- name: Set up vector
+  ansible.builtin.import_tasks: vector.yml
+  tags: vector
