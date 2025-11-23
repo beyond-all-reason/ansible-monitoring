@@ -1,11 +1,4 @@
 ---
-- name: Create Quadlet file for podman network
-  containers.podman.podman_network:
-    name: priv
-    state: quadlet
-    quadlet_options:
-      - Options=com.docker.network.bridge.name=podmanpriv
-
 # Caddy
 - name: Create caddy config directory
   ansible.builtin.file:
