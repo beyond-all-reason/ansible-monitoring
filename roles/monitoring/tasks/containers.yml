@@ -55,6 +55,15 @@
     dest: /opt/dex/config/config.docker.yaml
     mode: "0644"
   notify: Restart Dex
+- name: Create OAuth client secrets
+  containers.podman.podman_secret:
+    state: present
+    skip_existing: true
+    name: "{{ item }}"
+    data: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['hexdigits'], length=32) }}"
+  loop:
+    - grafana_oauth_client_secret
+    - oauth2proxy_oauth_client_secret
 - name: Set up Dex container
   containers.podman.podman_container:
     name: dex
@@ -64,6 +73,9 @@
       - "/opt/dex/config:/etc/dex:ro"
       - "dex_data:/var/dex/:idmap"
     network: priv.network
+    secrets:
+      - grafana_oauth_client_secret
+      - oauth2proxy_oauth_client_secret
     quadlet_options:
       - "AutoUpdate=registry"
       - "Pull=newer"
@@ -109,6 +121,8 @@
       - "/opt/grafana/config:/etc/grafana/:ro"
       - "grafana_data:/var/lib/grafana:idmap"
     network: priv.network
+    secrets:
+      - grafana_oauth_client_secret
     quadlet_options:
       - "AutoUpdate=registry"
       - "Pull=newer"
@@ -136,6 +150,12 @@
     dest: /opt/oauth2proxy/config/oauth2-proxy.cfg
     mode: "0644"
   notify: Restart OAuth2Proxy
+- name: Create OAuth2Proxy cookie secret
+  containers.podman.podman_secret:
+    state: present
+    skip_existing: true
+    name: oauth2proxy_cookie_secret
+    data: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['hexdigits'], length=32) }}"
 - name: Set up OAuth2Proxy container
   containers.podman.podman_container:
     name: oauth2proxy
@@ -145,6 +165,9 @@
       - "/opt/oauth2proxy/config:/config:ro"
     command: --config=/config/oauth2-proxy.cfg
     network: priv.network
+    secrets:
+      - oauth2proxy_cookie_secret
+      - oauth2proxy_oauth_client_secret
     quadlet_options:
       - "UserNS=auto"
       - |

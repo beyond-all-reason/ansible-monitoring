@@ -13,12 +13,12 @@ storage:
 
 staticClients:
 - id: "{{ grafana_oauth_client_id }}"
-  secret: "{{ grafana_oauth_client_secret }}"
+  secret: "{{ '{{ file.Read "/run/secrets/grafana_oauth_client_secret" }}' }}"
   name: "Grafana"
   redirectURIs:
   - "https://{{ domain_name_grafana }}/login/generic_oauth"
 - id: "{{ oauth2proxy_oauth_client_id }}"
-  secret: "{{ oauth2proxy_oauth_client_secret }}"
+  secret: "{{ '{{ file.Read "/run/secrets/oauth2proxy_oauth_client_secret" }}' }}"
   name: "OAuth2Proxy"
   redirectURIs:
   - "https://{{ domain_name_victoriametrics }}/oauth2/callback"
