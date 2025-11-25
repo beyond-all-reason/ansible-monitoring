@@ -9,6 +9,39 @@
 	metrics
 }
 
+(oauth2_protect_setup) {
+	handle /oauth2/* {
+		reverse_proxy oauth2proxy.dns.podman:4180 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-Uri {uri}
+		}
+	}
+}
+
+(oauth2_protect) {
+	forward_auth oauth2proxy.dns.podman:4180 {
+		uri /oauth2/auth?{args[0]}
+		header_up X-Real-IP {remote_host}
+
+		@unauthorized status 401
+		handle_response @unauthorized {
+			route {
+				# We need to assign original uri to variable, clear uri, and then assign
+				# it to redirect query param `rd` to escape it. Simple sign_in?rd={uri}
+				# doesn't escape the assigned value.
+				vars orig_uri {uri}
+				rewrite * ?
+				uri query rd {vars.orig_uri}
+
+				# Browsers can cache the redirect response which causes reauth loop.
+				header Cache-Control "no-cache, no-store, must-revalidate"
+
+				redir * /oauth2/sign_in?{query}
+			}
+		}
+	}
+}
+
 {{ domain_name_dex }} {
 	reverse_proxy dex.dns.podman:5556
 }
@@ -18,9 +51,17 @@
 }
 
 {{ domain_name_victoriametrics }} {
-	basic_auth {
-		# Username "metics", password "metrics"
-		metrics $2y$14$kzhgGvaDcRZwAKY5uZZVquOedyYXgPyJ66CejiHkuH5S6Km/jwY5K
+	import oauth2_protect_setup
+
+	handle /api/v1/write {
+		basic_auth {
+			{{ metrics_write_user }} {{ metrics_write_password }}
+		}
+		reverse_proxy victoriametrics.dns.podman:8428
 	}
-	reverse_proxy victoriametrics.dns.podman:8428
+
+	handle {
+		import oauth2_protect "{{ victoriametrics_web_allowed }}"
+		reverse_proxy victoriametrics.dns.podman:8428
+	}
 }

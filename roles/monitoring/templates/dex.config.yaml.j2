@@ -17,6 +17,11 @@ staticClients:
   name: "Grafana"
   redirectURIs:
   - "https://{{ domain_name_grafana }}/login/generic_oauth"
+- id: "{{ oauth2proxy_oauth_client_id }}"
+  secret: "{{ oauth2proxy_oauth_client_secret }}"
+  name: "OAuth2Proxy"
+  redirectURIs:
+  - "https://{{ domain_name_victoriametrics }}/oauth2/callback"
 
 enablePasswordDB: true
 

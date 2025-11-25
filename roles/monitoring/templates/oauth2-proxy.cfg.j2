@@ -1,0 +1,21 @@
+provider = "oidc"
+reverse_proxy = true
+oidc_issuer_url = "https://{{ domain_name_dex }}"
+# We don't do discovery because in local testing we don't have
+# real working TLS and real domain names. There is very likely
+# some nicer way to set it up.
+skip_oidc_discovery = true
+login_url = "https://{{ domain_name_dex }}/auth"
+oidc_jwks_url = "http://dex.dns.podman:5556/keys"
+redeem_url = "http://dex.dns.podman:5556/token"
+profile_url = "http://dex.dns.podman:5556/userinfo"
+validate_url = "http://dex.dns.podman:5556/userinfo"
+scope = "openid profile email groups"
+code_challenge_method = "S256"
+client_id = "{{ oauth2proxy_oauth_client_id }}"
+client_secret = "{{ oauth2proxy_oauth_client_secret }}"
+skip_provider_button = true
+http_address = "0.0.0.0:4180"
+cookie_secret = "3e58ebe80afa829449154de12ce94315"
+email_domains = ["*"]
+whitelist_domains = ["{{ domain_name_victoriametrics }}"]

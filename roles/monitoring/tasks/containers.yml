@@ -124,6 +124,40 @@
     state: started
     daemon_reload: true
 
+# OAuth2Proxy
+- name: Create OAuth2Proxy config directory
+  ansible.builtin.file:
+    path: /opt/oauth2proxy/config
+    state: directory
+    mode: "0755"
+- name: Write OAuth2Proxy scrape config
+  ansible.builtin.template:
+    src: oauth2-proxy.cfg.j2
+    dest: /opt/oauth2proxy/config/oauth2-proxy.cfg
+    mode: "0644"
+  notify: Restart OAuth2Proxy
+- name: Set up OAuth2Proxy container
+  containers.podman.podman_container:
+    name: oauth2proxy
+    state: quadlet
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.13.0
+    volumes:
+      - "/opt/oauth2proxy/config:/config:ro"
+    command: --config=/config/oauth2-proxy.cfg
+    network: priv.network
+    quadlet_options:
+      - "UserNS=auto"
+      - |
+        [Install]
+        WantedBy=default.target
+  notify: Restart OAuth2Proxy
+- name: Start and enable OAuth2Proxy service
+  ansible.builtin.systemd_service:
+    name: oauth2proxy.service
+    enabled: true
+    state: started
+    daemon_reload: true
+
 # VictoriaMetrics
 - name: Create VictoriaMetrics config directory
   ansible.builtin.file:
