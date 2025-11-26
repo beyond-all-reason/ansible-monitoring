@@ -28,7 +28,8 @@
       [network]
       # We set iptables driver so it plays well with ufw that also uses iptables
       firewall_driver = "iptables"
-- name: Configure uig/gid mapping ranges
+    mode: "0644"
+- name: Configure uid/gid mapping ranges
   ansible.builtin.lineinfile:
     path: "{{ item }}"
     regexp: "^containers:"
@@ -59,4 +60,5 @@
       [Network]
       DNS=10.89.0.1
       Domains=~dns.podman
+    mode: "0644"
   notify: Reload systemd-networkd

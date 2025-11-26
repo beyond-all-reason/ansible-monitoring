@@ -4,10 +4,11 @@
     path: /etc/apt/keyrings
     state: directory
     mode: "0755"
-- name: Download and import Datadog GPG key
-  ansible.builtin.shell:
-    cmd: curl -fsSL https://keys.datadoghq.com/DATADOG_APT_KEY_CURRENT.public | gpg --dearmor -o /etc/apt/keyrings/datadog-archive-keyring.gpg
-    creates: /etc/apt/keyrings/datadog-archive-keyring.gpg
+- name: Download Datadog GPG key
+  ansible.builtin.get_url:
+    url: https://keys.datadoghq.com/DATADOG_APT_KEY_CURRENT.public
+    dest: /etc/apt/keyrings/datadog-archive-keyring.asc
+    mode: "0644"
 - name: Add Vector repository
   ansible.builtin.deb822_repository:
     name: vector
@@ -15,7 +16,7 @@
     uris: https://apt.vector.dev/
     suites: stable
     components: vector-0
-    signed_by: /etc/apt/keyrings/datadog-archive-keyring.gpg
+    signed_by: /etc/apt/keyrings/datadog-archive-keyring.asc
 - name: Install vector
   ansible.builtin.apt:
     name: vector
