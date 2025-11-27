@@ -5,3 +5,19 @@ datasources:
     access: proxy
     url: http://victoriametrics.dns.podman:8428
     isDefault: true
+  # We also add raw Prometheus data source for easily importing dashboards
+  # that expect prometheus data source.
+  - name: VM Prometheus
+    type: prometheus
+    access: proxy
+    url: http://victoriametrics.dns.podman:8428
+    jsonData:
+      httpMethod: POST
+      manageAlerts: false
+      allowAsRecordingRulesTarget: false
+      prometheusType: Prometheus
+      prometheusVersion: "2.25.0"
+      cacheLevel: Low
+      disableRecordingRules: true
+      timeInterval: 10s
+      incrementalQueryOverlapWindow: 10m
