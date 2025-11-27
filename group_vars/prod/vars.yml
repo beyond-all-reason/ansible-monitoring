@@ -1,0 +1,8 @@
+---
+domain_name_dex: "infraid.beyondallreason.dev"
+domain_name_grafana: "grafana.beyondallreason.dev"
+domain_name_victoriametrics: "metrics.beyondallreason.dev"
+metrics_write_password: "{{ vault_metrics_write_password }}"
+victoriametrics_web_allowed: "allowed_emails=admin@local"
+grafana_role_attribute_path: "email == 'admin@local' && 'Admin' || 'None'"
+dex_local_admin_password: "{{ vault_dex_local_admin_password }}"
