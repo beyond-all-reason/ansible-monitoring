@@ -60,5 +60,6 @@
       [Network]
       DNS=10.89.0.1
       Domains=~dns.podman
+      KeepConfiguration=yes
     mode: "0644"
   notify: Reload systemd-networkd
