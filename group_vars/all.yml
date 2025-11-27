@@ -1,0 +1,4 @@
+---
+grafana_oauth_client_id: "grafana"
+oauth2proxy_oauth_client_id: "oauth2proxy"
+metrics_write_user: "metrics"
