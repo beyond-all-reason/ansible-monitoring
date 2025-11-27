@@ -11,6 +11,9 @@ storage:
   config:
     file: /var/dex/dex.db
 
+oauth2:
+  skipApprovalScreen: true
+
 staticClients:
 - id: "{{ grafana_oauth_client_id }}"
   secret: "{{ '{{ file.Read "/run/secrets/grafana_oauth_client_secret" }}' }}"
