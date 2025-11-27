@@ -5,4 +5,5 @@ domain_name_victoriametrics: "metrics.bar-mon.local"
 metrics_write_password: "$2y$14$kzhgGvaDcRZwAKY5uZZVquOedyYXgPyJ66CejiHkuH5S6Km/jwY5K" # "metrics"
 victoriametrics_web_allowed: "allowed_emails=admin@local"
 grafana_role_attribute_path: "email == 'admin@local' && 'Admin' || 'None'"
+dex_local_admin: true
 dex_local_admin_password: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W" # "password"

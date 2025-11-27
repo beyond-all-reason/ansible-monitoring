@@ -23,6 +23,22 @@ staticClients:
   redirectURIs:
   - "https://{{ domain_name_victoriametrics }}/oauth2/callback"
 
+{% if dex_github %}
+connectors:
+- type: github
+  id: github
+  name: GitHub
+  config:
+    clientID: "{{ github_client_id }}"
+    clientSecret: "{{ '{{ file.Read "/run/secrets/github_client_secret" }}' }}"
+    redirectURI: "https://{{ domain_name_dex }}/callback"
+    orgs:
+    - name: "{{ github_org }}"
+    teamNameField: slug
+    useLoginAsID: false
+{% endif %}
+
+{% if dex_local_admin %}
 enablePasswordDB: true
 
 staticPasswords:
@@ -30,3 +46,4 @@ staticPasswords:
     hash: "{{ dex_local_admin_password }}"
     username: "admin"
     userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+{% endif %}

@@ -64,6 +64,11 @@
   loop:
     - grafana_oauth_client_secret
     - oauth2proxy_oauth_client_secret
+- name: Create github client secret
+  containers.podman.podman_secret:
+    state: present
+    name: "github_client_secret"
+    data: "{{ github_client_secret | default('not_set') }}"
 - name: Set up Dex container
   containers.podman.podman_container:
     name: dex
@@ -76,6 +81,7 @@
     secrets:
       - grafana_oauth_client_secret
       - oauth2proxy_oauth_client_secret
+      - github_client_secret
     quadlet_options:
       - "AutoUpdate=registry"
       - "Pull=newer"
