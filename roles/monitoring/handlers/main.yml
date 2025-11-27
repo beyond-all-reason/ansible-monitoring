@@ -27,7 +27,3 @@
   ansible.builtin.systemd_service:
     name: oauth2proxy.service
     state: restarted
-- name: Restart vector
-  ansible.builtin.systemd_service:
-    name: vector
-    state: restarted
