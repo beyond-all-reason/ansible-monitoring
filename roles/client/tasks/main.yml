@@ -52,6 +52,8 @@
       "remoteWrite.tmpDataPath": "{{ vmagent_tmp_data_path }}"
       "httpListenAddr": "127.0.0.1:8429"
     vmagent_scrape_config:
+      global:
+        scrape_interval: 15s
       scrape_config_files:
         - "{{ vmagent_config_dir }}/scrape_configs.d/*.yml"
 - name: Write metrics password
