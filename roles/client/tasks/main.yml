@@ -1,0 +1,64 @@
+---
+- name: Set up node_exporter
+  ansible.builtin.include_role:
+    name: prometheus.prometheus.node_exporter
+  vars:
+    node_exporter_web_listen_address: 127.0.0.1:9100
+- name: Create scrape_configs.d
+  ansible.builtin.file:
+    path: "{{ monitoring_vmagent_config_dir }}/scrape_configs.d"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+- name: Write scrape configs
+  ansible.builtin.copy:
+    content: "{{ item.value | to_nice_yaml(indent=2) }}"
+    dest: "{{ monitoring_vmagent_config_dir }}/scrape_configs.d/{{ item.key }}.yml"
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ monitoring_scrape_configs | ansible.builtin.combine(node_exporter_scrape_config) | dict2items }}"
+  vars:
+    node_exporter_scrape_config:
+      00_node_exporter:
+        - job_name: node_exporter
+          static_configs:
+            - targets:
+                - 127.0.0.1:9100
+          relabel_configs:
+            - target_label: instance
+              replacement: "{{ ansible_hostname }}"
+  notify: Restart vmagent
+- name: Set write host ip
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    search_string: "{{ line_comment }}"
+    line: "{{ monitoring_metrics_write_host_ip }} {{ monitoring_metrics_write_hostname }} {{ line_comment }}"
+  vars:
+    line_comment: "# monitoring write host"
+  when: "monitoring_metrics_write_host_ip != ''"
+- name: Set up vmagent
+  ansible.builtin.include_role:
+    name: victoriametrics.cluster.vmagent
+  vars:
+    vmagent_config_dir: "{{ monitoring_vmagent_config_dir }}"
+    vmagent_service_args:
+      "remoteWrite.url": "https://{{ monitoring_metrics_write_hostname }}/api/v1/write"
+      "remoteWrite.tlsInsecureSkipVerify": "{{ (monitoring_metrics_write_host_ip != '') | ternary('true', 'false') }}"
+      "remoteWrite.basicAuth.username": "{{ monitoring_metrics_write_user }}"
+      "remoteWrite.basicAuth.passwordFile": "{{ vmagent_config_dir }}/remote_write_password"
+      "promscrape.config": "{{ vmagent_config_dir }}/config.yml"
+      "remoteWrite.tmpDataPath": "{{ vmagent_tmp_data_path }}"
+      "httpListenAddr": "127.0.0.1:8429"
+    vmagent_scrape_config:
+      scrape_config_files:
+        - "{{ vmagent_config_dir }}/scrape_configs.d/*.yml"
+- name: Write metrics password
+  ansible.builtin.copy:
+    content: "{{ monitoring_metrics_write_password }}"
+    dest: "{{ monitoring_vmagent_config_dir }}/remote_write_password"
+    owner: vic_vm_agent
+    group: vic_vm_agent
+    mode: 0600
+  no_log: true

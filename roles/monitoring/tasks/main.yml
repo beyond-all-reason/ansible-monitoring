@@ -8,3 +8,6 @@
 - name: Set up containers
   ansible.builtin.import_tasks: containers.yml
   tags: containers
+- name: Attach client montoring
+  ansible.builtin.include_role:
+    name: client

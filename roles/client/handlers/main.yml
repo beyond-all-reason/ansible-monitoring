@@ -1,0 +1,5 @@
+---
+- name: Restart vmagent
+  ansible.builtin.systemd_service:
+    name: vic-vmagent
+    state: restarted

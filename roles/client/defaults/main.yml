@@ -1,0 +1,13 @@
+---
+# monitoring_instance_dev is used only below to set defaults
+monitoring_write_instance_dev: true
+
+monitoring_metrics_write_host_ip: "{{ monitoring_write_instance_dev | ternary(undef(hint='monitoring_metrics_write_host_ip must be set for dev instance'), '') }}"
+monitoring_metrics_write_hostname: "{{ monitoring_write_instance_dev | ternary('metrics.bar-mon.local', 'metrics.beyondallreason.dev') }}"
+monitoring_metrics_write_user: "metrics"
+monitoring_metrics_write_password: "{{ monitoring_write_instance_dev | ternary('metrics', undef(hint='monitoring_metrics_write_password must be set for prod instance')) }}"
+
+# Set the below in the consumer to put some additional scrape configs in place
+monitoring_scrape_configs: {}
+
+monitoring_vmagent_config_dir: /etc/vmagent
