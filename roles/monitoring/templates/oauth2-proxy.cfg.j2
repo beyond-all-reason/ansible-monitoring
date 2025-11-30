@@ -18,5 +18,7 @@ skip_provider_button = true
 approval_prompt = "none"
 http_address = "0.0.0.0:4180"
 cookie_secret_file = "/run/secrets/oauth2proxy_cookie_secret"
+cookie_samesite = "lax"
+cookie_expire = "20h"
 email_domains = ["*"]
 whitelist_domains = ["{{ domain_name_victoriametrics }}"]
