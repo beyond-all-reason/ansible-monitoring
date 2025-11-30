@@ -60,8 +60,20 @@
 		reverse_proxy victoriametrics.dns.podman:8428
 	}
 
+    @vmui {
+        path / /vmui /vmui/*
+        path /api/v1/export /api/v1/export/*
+        path /api/v1/query_range /api/v1/query
+        path /api/v1/status /api/v1/series /api/v1/labels /api/v1/label/*
+        path /metric-relabel-debug /expand-with-exprs
+    }
+	handle @vmui {
+		import oauth2_protect "{{ victoriametrics_web_allowed_editor }}"
+		reverse_proxy victoriametrics.dns.podman:8428
+	}
+
 	handle {
-		import oauth2_protect "{{ victoriametrics_web_allowed }}"
+		import oauth2_protect "{{ victoriametrics_web_allowed_admin }}"
 		reverse_proxy victoriametrics.dns.podman:8428
 	}
 }
