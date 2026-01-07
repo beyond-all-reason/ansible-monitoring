@@ -1,0 +1,39 @@
+---
+- name: Get current smokeping state
+  ansible.builtin.command: "{{ smokeping_prober_bin_path }} --version"
+  failed_when: false
+  changed_when: false
+  register: smokeping_prober_version_check
+- name: Fetch smokeping
+  ansible.builtin.unarchive:
+    src: "https://github.com/SuperQ/smokeping_prober/releases/download/v{{ smokeping_prober_version }}/smokeping_prober-{{ smokeping_prober_version }}.linux-amd64.tar.gz"
+    dest: /tmp
+    remote_src: yes
+  when: |
+    smokeping_prober_version_check.stdout is not defined
+    or ('version ' + smokeping_prober_version) not in smokeping_prober_version_check.stderr
+  register: smokeping_prober_download_check
+- name: Install smokeping_prober
+  ansible.builtin.copy:
+    src: "/tmp/smokeping_prober-{{ smokeping_prober_version }}.linux-amd64/smokeping_prober"
+    dest: "{{ smokeping_prober_bin_path }}"
+    mode: 0755
+    remote_src: true
+  when: smokeping_prober_download_check is changed
+- name: Drop download smokeping_prober
+  ansible.builtin.file:
+    path: "/tmp/smokeping_prober-{{ smokeping_prober_version }}.linux-amd64"
+    state: absent
+- name: Copy the smokeping_prober systemd unit file.
+  template:
+    src: smokeping_prober.service.j2
+    dest: /etc/systemd/system/smokeping_prober.service
+    mode: 0644
+  register: node_exporter_service
+  notify: Restart smokeping_prober
+- name: Enable smokeping_prober service
+  ansible.builtin.systemd_service:
+    name: smokeping_prober.service
+    enabled: true
+    state: started
+    daemon_reload: true

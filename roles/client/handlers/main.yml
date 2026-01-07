@@ -3,3 +3,7 @@
   ansible.builtin.systemd_service:
     name: vic-vmagent
     state: restarted
+- name: Restart smokeping_prober
+  ansible.builtin.systemd_service:
+    name: smokeping_prober
+    state: restarted

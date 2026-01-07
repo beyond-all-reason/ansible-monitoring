@@ -4,6 +4,9 @@
     name: prometheus.prometheus.node_exporter
   vars:
     node_exporter_web_listen_address: 127.0.0.1:9100
+- name: Set up smokeping prober
+  ansible.builtin.import_tasks:
+    file: smokeping.yml
 - name: Create scrape_configs.d
   ansible.builtin.file:
     path: "{{ monitoring_vmagent_config_dir }}/scrape_configs.d"
@@ -18,14 +21,22 @@
     owner: root
     group: root
     mode: 0644
-  loop: "{{ monitoring_scrape_configs | ansible.builtin.combine(node_exporter_scrape_config) | dict2items }}"
+  loop: "{{ monitoring_scrape_configs | ansible.builtin.combine(local_scrape_configs) | dict2items }}"
   vars:
-    node_exporter_scrape_config:
+    local_scrape_configs:
       00_node_exporter:
         - job_name: node_exporter
           static_configs:
             - targets:
                 - 127.0.0.1:9100
+          relabel_configs:
+            - target_label: instance
+              replacement: "{{ ansible_hostname }}"
+      09_smokeping_prober:
+        - job_name: smokeping_prober
+          static_configs:
+            - targets:
+                - 127.0.0.1:9374
           relabel_configs:
             - target_label: instance
               replacement: "{{ ansible_hostname }}"

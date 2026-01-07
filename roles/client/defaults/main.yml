@@ -11,3 +11,7 @@ monitoring_metrics_write_password: "{{ monitoring_write_instance_dev | ternary('
 monitoring_scrape_configs: {}
 
 monitoring_vmagent_config_dir: /etc/vmagent
+
+smokeping_prober_version: "0.10.0"
+smokeping_prober_bin_path: /usr/local/bin/smokeping_prober
+smokeping_prober_targets: server4.beyondallreason.info
