@@ -10,7 +10,7 @@ then
   exit
 fi
 
-IP=$(command -v incus &> /dev/null && incus list -f csv -c 4 bar-mon-test | grep -E 'eth|enp' | cut -d' ' -f1)
+IP=$(command -v incus &> /dev/null && incus list -f csv -c 4 bar-mon-test | grep -E 'eth|enp' | cut -d' ' -f1 | tr -d '"')
 
 # For the case when used doen't have Incus installed at all or the container is not running
 if [[ -z "$IP" ]]

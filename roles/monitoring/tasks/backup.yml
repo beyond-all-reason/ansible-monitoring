@@ -1,0 +1,94 @@
+---
+# Grafana backup configuration
+
+- name: Install backup dependencies
+  ansible.builtin.package:
+    name:
+      - rclone
+      - zstd
+      - sqlite3
+    state: present
+
+- name: Create backup configuration directory
+  ansible.builtin.file:
+    path: /usr/local/etc/backup
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+
+- name: Create rclone configuration
+  ansible.builtin.template:
+    src: rclone.conf.j2
+    dest: /usr/local/etc/backup/rclone.conf
+    mode: "0600"
+    owner: root
+    group: root
+  when: backup_rclone_config is defined
+
+- name: Create backup script directory
+  ansible.builtin.file:
+    path: /usr/local/bin
+    state: directory
+    mode: "0755"
+
+- name: Install Grafana backup script
+  ansible.builtin.template:
+    src: grafana-backup.sh.j2
+    dest: /usr/local/bin/grafana-backup.sh
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Install Grafana restore script
+  ansible.builtin.template:
+    src: grafana-restore.sh.j2
+    dest: /usr/local/bin/grafana-restore.sh
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Create systemd service for Grafana backup
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/grafana-backup.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Grafana Database Backup
+      After=grafana.service
+      Wants=grafana.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/grafana-backup.sh
+      User=root
+      Group=root
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create systemd timer for Grafana backup
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/grafana-backup.timer
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Run Grafana Database Backup
+      Requires=grafana-backup.service
+
+      [Timer]
+      OnCalendar={{ grafana_backup_schedule | default('daily') }}
+      Persistent=true
+      RandomizedDelaySec={{ grafana_backup_randomized_delay | default('1h') }}
+
+      [Install]
+      WantedBy=timers.target
+  notify: Reload systemd
+
+- name: Enable and start Grafana backup timer
+  ansible.builtin.systemd_service:
+    name: grafana-backup.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: grafana_backup_enabled | default(true)

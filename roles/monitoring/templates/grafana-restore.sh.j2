@@ -1,0 +1,251 @@
+#!/bin/bash
+
+set -e -u -o pipefail
+
+# Grafana database restore script
+# Restores the Grafana SQLite database from backup
+
+SCRIPT_NAME=$(basename "$0")
+USAGE="USAGE: $SCRIPT_NAME <backup-file>
+
+Restore Grafana database from a backup file.
+
+Arguments:
+  backup-file    Path to the backup file (*.db.zst) or just the filename if in backup directory
+
+Examples:
+  $SCRIPT_NAME grafana-20260225161455.db.zst
+  $SCRIPT_NAME /var/backups/grafana/grafana-20260225161455.db.zst
+  $SCRIPT_NAME backup:grafana-backups/grafana-20260225161455.db.zst  # from rclone remote
+
+Options:
+  -h, --help     Show this help message
+  -y, --yes      Skip confirmation prompt
+  -d, --dry-run  Show what would be done without making changes
+"
+
+# Parse command line arguments
+BACKUP_FILE=""
+SKIP_CONFIRMATION=false
+DRY_RUN=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            echo "$USAGE"
+            exit 0
+            ;;
+        -y|--yes)
+            SKIP_CONFIRMATION=true
+            shift
+            ;;
+        -d|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            echo "$USAGE" >&2
+            exit 1
+            ;;
+        *)
+            if [[ -z "$BACKUP_FILE" ]]; then
+                BACKUP_FILE="$1"
+            else
+                echo "Too many arguments" >&2
+                echo "$USAGE" >&2
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$BACKUP_FILE" ]]; then
+    echo "Error: backup-file argument is required" >&2
+    echo "$USAGE" >&2
+    exit 1
+fi
+
+if [[ $(id -u) != 0 ]]; then
+    echo "This script must be run as root" >&2
+    exit 1
+fi
+
+# Grafana paths
+GRAFANA_DB="/var/lib/containers/storage/volumes/grafana_data/_data/grafana.db"
+BACKUP_DIR="/var/tmp/backup"
+RESTORE_TEMP="$BACKUP_DIR/restore"
+
+# Create necessary directories
+mkdir -p "$BACKUP_DIR" "$RESTORE_TEMP"
+chmod 700 "$BACKUP_DIR" "$RESTORE_TEMP"
+
+echo "Grafana Database Restore Utility"
+echo "================================="
+
+# Determine backup source and download if necessary
+RESTORE_FILE=""
+if [[ "$BACKUP_FILE" == backup:* ]]; then
+    # Remote backup via rclone
+    REMOTE_FILE="$BACKUP_FILE"
+    LOCAL_BACKUP_FILE="$RESTORE_TEMP/$(basename "${BACKUP_FILE#backup:}")"
+    echo "Downloading backup from remote storage..."
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "DRY-RUN: Would download $REMOTE_FILE to $LOCAL_BACKUP_FILE"
+    else
+        rclone --config /usr/local/etc/backup/rclone.conf copyto "$REMOTE_FILE" "$LOCAL_BACKUP_FILE"
+        echo "Downloaded: $LOCAL_BACKUP_FILE"
+    fi
+    RESTORE_FILE="$LOCAL_BACKUP_FILE"
+elif [[ -f "$BACKUP_FILE" ]]; then
+    # Absolute path provided
+    RESTORE_FILE="$BACKUP_FILE"
+elif [[ -f "{{ backup_path }}/$BACKUP_FILE" ]]; then
+    # Filename only, look in backup directory
+    RESTORE_FILE="{{ backup_path }}/$BACKUP_FILE"
+elif [[ -f "/var/tmp/backup/$BACKUP_FILE" ]]; then
+    # Look in temporary backup directory
+    RESTORE_FILE="/var/tmp/backup/$BACKUP_FILE"
+else
+    echo "Error: Backup file not found: $BACKUP_FILE" >&2
+    echo "Checked locations:" >&2
+    echo "  - $BACKUP_FILE (as provided)" >&2
+    echo "  - {{ backup_path }}/$BACKUP_FILE" >&2
+    echo "  - /var/tmp/backup/$BACKUP_FILE" >&2
+    exit 1
+fi
+
+if [[ "$DRY_RUN" == false && ! -f "$RESTORE_FILE" ]]; then
+    echo "Error: Restore file not found: $RESTORE_FILE" >&2
+    exit 1
+fi
+
+echo "Backup file: $RESTORE_FILE"
+if [[ "$DRY_RUN" == false ]]; then
+    BACKUP_SIZE=$(du -h "$RESTORE_FILE" | cut -f1)
+    echo "Backup size: $BACKUP_SIZE"
+fi
+
+# Check if Grafana is running and offer to stop it
+if systemctl is-active --quiet grafana.service 2>/dev/null; then
+    echo "WARNING: Grafana service is currently running!"
+    echo "It's recommended to stop Grafana before restoring the database."
+    if [[ "$SKIP_CONFIRMATION" == false ]]; then
+        read -p "Stop Grafana service? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if [[ "$DRY_RUN" == true ]]; then
+                echo "DRY-RUN: Would stop grafana.service"
+            else
+                echo "Stopping Grafana service..."
+                systemctl stop grafana.service
+                echo "Grafana service stopped."
+            fi
+        fi
+    fi
+fi
+
+# Show current database info
+if [[ -f "$GRAFANA_DB" && "$DRY_RUN" == false ]]; then
+    CURRENT_SIZE=$(du -h "$GRAFANA_DB" | cut -f1)
+    CURRENT_MODIFIED=$(stat -c %y "$GRAFANA_DB")
+    echo "Current database: $CURRENT_SIZE, modified: $CURRENT_MODIFIED"
+fi
+
+# Backup current database
+CURRENT_BACKUP=""
+if [[ -f "$GRAFANA_DB" ]]; then
+    CURRENT_BACKUP="$RESTORE_TEMP/grafana-current-$(date +%Y%m%d%H%M%S).db"
+    echo "Backing up current database to: $CURRENT_BACKUP"
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "DRY-RUN: Would backup current database"
+    else
+        cp "$GRAFANA_DB" "$CURRENT_BACKUP"
+    fi
+fi
+
+# Confirm restore operation
+echo ""
+echo "RESTORE OPERATION SUMMARY:"
+echo "- Source: $RESTORE_FILE"
+echo "- Target: $GRAFANA_DB"
+if [[ -n "$CURRENT_BACKUP" ]]; then
+    echo "- Current DB backup: $CURRENT_BACKUP"
+fi
+echo ""
+
+if [[ "$DRY_RUN" == true ]]; then
+    echo "DRY-RUN: No changes will be made"
+    exit 0
+fi
+
+if [[ "$SKIP_CONFIRMATION" == false ]]; then
+    echo "WARNING: This will replace the current Grafana database!"
+    read -p "Are you sure you want to continue? [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Restore cancelled."
+        exit 0
+    fi
+fi
+
+# Perform restore
+echo "Starting restore operation..."
+
+# Decompress backup
+TEMP_DB="$RESTORE_TEMP/grafana-restore.db"
+echo "Decompressing backup..."
+zstd -d --stdout "$RESTORE_FILE" > "$TEMP_DB"
+
+# Verify decompressed file
+if [[ ! -f "$TEMP_DB" ]]; then
+    echo "Error: Failed to decompress backup file" >&2
+    exit 1
+fi
+
+# Basic SQLite integrity check
+echo "Verifying database integrity..."
+if ! sqlite3 "$TEMP_DB" "PRAGMA integrity_check;" >/dev/null 2>&1; then
+    echo "Error: Backup file appears to be corrupted" >&2
+    exit 1
+fi
+
+# Replace database file
+echo "Replacing database file..."
+if [[ -f "$GRAFANA_DB" ]]; then
+    rm "$GRAFANA_DB"
+fi
+mv "$TEMP_DB" "$GRAFANA_DB"
+
+# Set proper ownership and permissions
+chown 472:472 "$GRAFANA_DB" 2>/dev/null || true  # Grafana user in container
+chmod 640 "$GRAFANA_DB"
+
+echo "Database restored successfully!"
+
+# Ask to restart Grafana
+if [[ "$SKIP_CONFIRMATION" == false ]]; then
+    read -p "Start Grafana service? [Y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        echo "Starting Grafana service..."
+        systemctl start grafana.service
+        echo "Grafana service started."
+    fi
+else
+    echo "Starting Grafana service..."
+    systemctl start grafana.service
+    echo "Grafana service started."
+fi
+
+# Cleanup
+echo "Cleaning up temporary files..."
+rm -rf "$RESTORE_TEMP"
+
+echo ""
+echo "Restore completed successfully!"
+echo "Database: $GRAFANA_DB"
+if [[ -n "$CURRENT_BACKUP" ]]; then
+    echo "Original database backed up to: $CURRENT_BACKUP"
+fi

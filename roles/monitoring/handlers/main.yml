@@ -3,6 +3,9 @@
   ansible.builtin.systemd:
     name: systemd-networkd
     state: reloaded
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
 - name: Restart Caddy
   ansible.builtin.systemd_service:
     name: caddy.service

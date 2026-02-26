@@ -2,12 +2,23 @@
 domain_name_dex: "id.bar-mon.local"
 domain_name_grafana: "grafana.bar-mon.local"
 domain_name_victoriametrics: "metrics.bar-mon.local"
-metrics_write_password: "$2y$14$kzhgGvaDcRZwAKY5uZZVquOedyYXgPyJ66CejiHkuH5S6Km/jwY5K" # "metrics"
+metrics_write_password: "$2y$14$kzhgGvaDcRZwAKY5uZZVquOedyYXgPyJ66CejiHkuH5S6Km/jwY5K"  # "metrics"
 victoriametrics_web_allowed: "allowed_emails=admin@local"
 victoriametrics_web_allowed_admin: "{{ victoriametrics_web_allowed }}"
 victoriametrics_web_allowed_editor: "{{ victoriametrics_web_allowed }}"
 grafana_role_attribute_path: "email == 'admin@local' && 'Admin' || 'None'"
 dex_local_admin: true
-dex_local_admin_password: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W" # "password"
-monitoring_write_instance_dev: true # for the client role
+dex_local_admin_password: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # "password"
+monitoring_write_instance_dev: true  # for the client role
 monitoring_metrics_write_host_ip: "127.0.0.1"
+
+# Backup configuration
+grafana_backup_enabled: true
+grafana_backup_schedule: "02:00"  # Run at 2 AM daily
+grafana_backup_randomized_delay: "30min"
+backup_storage_type: "local"  # For testing - use local storage
+backup_path: "/var/backups/grafana"
+backup_rclone_config: true  # Enable rclone config creation
+
+# Development configuration
+dev_allow_http: true  # Allow HTTP access for development

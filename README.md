@@ -5,9 +5,39 @@
 
 This is an [Ansible](https://en.wikipedia.org/wiki/Ansible_(software)) playbook for setting up central BAR monitoring server.
 
-## Usage
+## Features
 
-**TODO**
+- **Grafana** - Data visualization and dashboards
+- **VictoriaMetrics** - Time-series database for metrics storage
+- **Dex** - OpenID Connect identity provider for authentication
+- **OAuth2Proxy** - Authentication proxy for secure access
+- **Caddy** - Reverse proxy with automatic TLS
+- **Automated Backup System** - Comprehensive Grafana database backup and restore
+
+## Backup System
+
+This playbook includes a production-ready automated backup solution for Grafana databases:
+
+### Key Features
+- ✅ **Automated daily backups** with systemd timers
+- ✅ **zstd compression** (96% compression ratio achieved)
+- ✅ **Cloud storage support** via rclone (GCS, S3, etc.)
+- ✅ **Comprehensive restore utility** with safety features
+- ✅ **Database integrity verification** 
+- ✅ **Automatic service management** during operations
+
+### Quick Usage
+
+```bash
+# Manual backup
+/usr/local/bin/grafana-backup.sh
+
+# Restore from backup
+/usr/local/bin/grafana-restore.sh --yes grafana-20260225161455.db.zst
+
+# Check backup status
+systemctl status grafana-backup.timer
+```
 
 ## Local testing
 

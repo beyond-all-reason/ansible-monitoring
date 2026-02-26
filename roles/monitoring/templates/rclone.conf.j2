@@ -1,0 +1,25 @@
+# Rclone configuration for backup storage
+# This template can be customized for different cloud storage providers
+
+[backup]
+type = {{ backup_storage_type | default('local') }}
+{% if backup_storage_type == 'gcs' %}
+# Google Cloud Storage configuration
+project_number = {{ gcs_project_number }}
+service_account_file = {{ gcs_service_account_file | default('/usr/local/etc/backup/gcs-service-account.json') }}
+{% elif backup_storage_type == 's3' %}
+# Amazon S3 configuration  
+provider = {{ s3_provider | default('AWS') }}
+access_key_id = {{ s3_access_key_id }}
+secret_access_key = {{ s3_secret_access_key }}
+region = {{ s3_region | default('us-east-1') }}
+{% elif backup_storage_type == 'local' %}
+# Local storage (for testing)
+# WARNING: This stores backups locally and should only be used for testing!
+nounc = {{ backup_local_nounc | default('true') }}
+{% endif %}
+
+{% if backup_additional_config is defined %}
+# Additional configuration
+{{ backup_additional_config }}
+{% endif %}
