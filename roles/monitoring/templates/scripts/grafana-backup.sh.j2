@@ -15,3 +15,5 @@ zstd --long -9 --stdout "$GRAFANA_DB" > "/var/tmp/backup/$BACKUP_FILE"
 systemctl start grafana.service
 
 rclone --config /usr/local/etc/backup/rclone.conf copyto "/var/tmp/backup/$BACKUP_FILE" "backup:grafana-backups/$BACKUP_FILE"
+
+rm -f "/var/tmp/backup/$BACKUP_FILE"
