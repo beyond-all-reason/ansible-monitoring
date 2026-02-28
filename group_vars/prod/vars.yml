@@ -8,11 +8,7 @@ github_org: "beyond-all-reason"
 github_client_id: "{{ vault_github_client_id }}"
 github_client_secret: "{{ vault_github_client_secret }}"
 victoriametrics_web_allowed_admin: "allowed_groups=beyond-all-reason:monitoring-admins"
-victoriametrics_web_allowed_editor: >-
-  allowed_groups=beyond-all-reason:monitoring-admins,beyond-all-reason:monitoring-editors
-grafana_role_attribute_path: >-
-  contains(groups[*], 'beyond-all-reason:monitoring-admins') && 'Admin' ||
-  contains(groups[*], 'beyond-all-reason:monitoring-editors') && 'Editor' ||
-  contains(groups[*], 'beyond-all-reason:monitoring-viewers') && 'Viewer' || 'None'
-monitoring_write_instance_dev: false  # for the client role
+victoriametrics_web_allowed_editor: "allowed_groups=beyond-all-reason:monitoring-admins,beyond-all-reason:monitoring-editors"
+grafana_role_attribute_path: "contains(groups[*], 'beyond-all-reason:monitoring-admins') && 'Admin' || contains(groups[*], 'beyond-all-reason:monitoring-editors') && 'Editor' || contains(groups[*], 'beyond-all-reason:monitoring-viewers') && 'Viewer' || 'None'"
+monitoring_write_instance_dev: false # for the client role
 monitoring_metrics_write_password: "{{ vault_metrics_write_password_raw }}"

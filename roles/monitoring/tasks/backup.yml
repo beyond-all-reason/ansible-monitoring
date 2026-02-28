@@ -34,16 +34,8 @@
 
 - name: Install Grafana backup script
   ansible.builtin.template:
-    src: grafana-backup.sh.j2
+    src: scripts/grafana-backup.sh.j2
     dest: /usr/local/bin/grafana-backup.sh
-    mode: "0755"
-    owner: root
-    group: root
-
-- name: Install Grafana restore script
-  ansible.builtin.template:
-    src: grafana-restore.sh.j2
-    dest: /usr/local/bin/grafana-restore.sh
     mode: "0755"
     owner: root
     group: root
@@ -79,7 +71,6 @@
       [Timer]
       OnCalendar={{ grafana_backup_schedule | default('daily') }}
       Persistent=true
-      RandomizedDelaySec={{ grafana_backup_randomized_delay | default('1h') }}
 
       [Install]
       WantedBy=timers.target

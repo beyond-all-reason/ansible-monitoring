@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e -u -o pipefail
+
+mkdir -p /var/tmp/backup
+chmod 700 /var/tmp/backup
+
+BACKUP_FILE="grafana-$(date +%Y%m%d%H%M%S).db.zst"
+GRAFANA_DB="/var/lib/containers/storage/volumes/grafana_data/_data/grafana.db"
+
+# https://grafana.com/docs/grafana/latest/administration/back-up-grafana/#sqlite
+systemctl stop grafana.service
+
+zstd --long -9 --stdout "$GRAFANA_DB" > "/var/tmp/backup/$BACKUP_FILE"
+
+systemctl start grafana.service
+
+rclone --config /usr/local/etc/backup/rclone.conf copyto "/var/tmp/backup/$BACKUP_FILE" "backup:grafana-backups/$BACKUP_FILE"

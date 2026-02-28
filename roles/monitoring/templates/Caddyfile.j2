@@ -3,10 +3,6 @@
 	metrics {
 		per_host
 	}
-{% if dev_allow_http | default(false) %}
-	# For development: allow both HTTP and HTTPS
-	local_certs
-{% endif %}
 }
 
 :2020 {
@@ -49,13 +45,6 @@
 {{ domain_name_dex }} {
 	reverse_proxy dex.dns.podman:5556
 }
-
-{% if dev_allow_http | default(false) %}
-# HTTP version for development
-http://{{ domain_name_grafana }} {
-	reverse_proxy grafana.dns.podman:3000
-}
-{% endif %}
 
 {{ domain_name_grafana }} {
 	reverse_proxy grafana.dns.podman:3000
