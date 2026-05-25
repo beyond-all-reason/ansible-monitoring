@@ -42,6 +42,12 @@ you can add/update it with:
 ansible ,localhost -b -K -m lineinfile -a "path=/etc/hosts regexp='.*bar-mon.*' line='$(ansible-inventory --host test | jq -r '.ansible_host') id.bar-mon.local grafana.bar-mon.local metrics.bar-mon.local'"
 ```
 
+Some additional roles provided by ansible galaxy are required:
+```shell
+ansible-galaxy collection build && \
+ansible-galaxy collection install beyondallreason-monitoring-0.0.1.tar.gz
+```
+
 ### Usage
 
 Now you can use all the playbooks and roles as usual, just make sure you are targeting the `dev` inventory group or `test` host. For example:
