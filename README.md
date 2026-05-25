@@ -1,13 +1,76 @@
 # Ansible playbook for BAR monitoring
 
-> [!WARNING]
-> This repo is work in progress, not finished, nothing to see here yet.
-
 This is an [Ansible](https://en.wikipedia.org/wiki/Ansible_(software)) playbook for setting up central BAR monitoring server.
+
+## Architecture
+
+The monitoring server runs a set of Podman containers (managed via Quadlet) on a shared private network, fronted by Caddy. Authentication is handled by Dex (federating to GitHub). Client hosts push metrics to the server over an authenticated HTTPS endpoint.
+
+```mermaid
+flowchart LR
+    user([User browser])
+    gh([GitHub OAuth])
+
+    subgraph client[Client host]
+        node[node_exporter<br/>]
+        smoke[other targets<br/>]@{ shape: procs }
+        vmagent[vmagent]
+        node --> vmagent
+        smoke --> vmagent
+    end
+
+    subgraph server[Monitoring server]
+        caddy[Caddy]
+
+        subgraph privnet[priv.network - Podman]
+            dex[Dex]
+            oauth[OAuth2 Proxy]
+            grafana[Grafana]
+            vm[(VictoriaMetrics)]
+        end
+
+        caddy -->|grafana.*| grafana
+        caddy -->|id.*| dex
+        caddy -->|metrics.* /api/v1/write<br/>basic auth| vm
+        caddy -->|metrics.* UI<br/>after auth OK| vm
+        caddy -. forward_auth check<br/>+ /oauth2/* sign-in .-> oauth
+        grafana -. OIDC .-> dex
+        grafana -- query --> vm
+        oauth -. OIDC .-> dex
+    end
+
+    user -->|HTTPS| caddy
+    dex -. federated login .-> gh
+    vmagent -->|remote_write HTTPS<br/>basic auth| caddy
+```
 
 ## Usage
 
-**TODO**
+#### Dependencies
+
+Make sure required collections are installed by running:
+
+```
+ansible-galaxy collection install -r requirements.yml
+```
+
+If you pull repo and there are changes to that file, you need to rerun the command to make sure you pick up latest changes.
+
+#### Vault
+
+We use [Ansible vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/index.html) for management of secrets in playbook. Check out [the official guide](https://docs.ansible.com/ansible/latest/vault_guide/vault_encrypting_content.html#encrypting-files-with-ansible-vault) for how to view and edit them.
+
+For running the playbook against the prod instances, you will need the vault password. You have to run Ansible with `--ask-vault-pass` flag and provide the password when prompted or you can store it in a file (Please put it only in something like [tmpfs](https://en.wikipedia.org/wiki/Tmpfs)!) and point Ansible at it with `--vault-password-file` flag or `ANSIBLE_VAULT_PASSWORD_FILE` environment variable.
+
+#### Running
+
+Currently there is only one playbook that sets up the whole server. You can run it against the `main` instance to check if everything is up to date with:
+
+```
+ansible-playbook -l main play.yml --check --diff
+```
+
+Then drop the `--check` flag to actually apply the changes.
 
 ## Local testing
 
