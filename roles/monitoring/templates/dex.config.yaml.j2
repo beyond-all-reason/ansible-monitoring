@@ -25,6 +25,7 @@ staticClients:
   name: "OAuth2Proxy"
   redirectURIs:
   - "https://{{ domain_name_victoriametrics }}/oauth2/callback"
+  - "https://{{ domain_name_victorialogs }}/oauth2/callback"
 
 {% if dex_github %}
 connectors:

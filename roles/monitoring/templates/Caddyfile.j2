@@ -77,3 +77,33 @@
 		reverse_proxy victoriametrics.dns.podman:8428
 	}
 }
+
+{{ domain_name_victorialogs }} {
+	import oauth2_protect_setup
+
+	@vlogs {
+		path /insert/*
+		path /health
+	}
+
+	handle @vlogs {
+		basic_auth {
+			{{ logs_write_user }} {{ logs_write_password }}
+		}
+		reverse_proxy victorialogs.dns.podman:9428
+	}
+
+	@vmui {
+		path / /vmui /vmui/*
+	}
+
+	handle @vmui {
+		import oauth2_protect "{{ victorialogs_web_allowed_editor }}"
+		reverse_proxy victorialogs.dns.podman:9428
+	}
+
+	handle {
+		import oauth2_protect "{{ victorialogs_web_allowed_admin }}"
+		reverse_proxy victorialogs.dns.podman:9428
+	}
+}

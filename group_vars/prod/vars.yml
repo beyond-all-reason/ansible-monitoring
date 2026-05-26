@@ -2,7 +2,9 @@
 domain_name_dex: "infraid.beyondallreason.dev"
 domain_name_grafana: "grafana.beyondallreason.dev"
 domain_name_victoriametrics: "metrics.beyondallreason.dev"
+domain_name_victorialogs: "logs.beyondallreason.dev"
 metrics_write_password: "{{ vault_metrics_write_password }}"
+logs_write_password: "TODO! I don't have access to the vault"
 dex_github: true
 github_org: "beyond-all-reason"
 github_client_id: "{{ vault_github_client_id }}"
