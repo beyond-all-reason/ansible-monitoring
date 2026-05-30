@@ -7,8 +7,16 @@ monitoring_metrics_write_hostname: "{{ monitoring_write_instance_dev | ternary('
 monitoring_metrics_write_user: "metrics"
 monitoring_metrics_write_password: "{{ monitoring_write_instance_dev | ternary('metrics', undef(hint='monitoring_metrics_write_password must be set for prod instance')) }}"
 
+monitoring_logs_write_host_ip: "{{ monitoring_write_instance_dev | ternary(undef(hint='monitoring_logs_write_host_ip must be set for dev instance'), '') }}"
+monitoring_logs_write_hostname: "{{ monitoring_write_instance_dev | ternary('logs.bar-mon.local', 'logs.beyondallreason.dev') }}"
+monitoring_logs_write_user: "logs"
+monitoring_logs_write_password: "{{ monitoring_write_instance_dev | ternary('logs', undef(hint='monitoring_logs_write_password must be set for prod instance')) }}"
+monitoring_logs_tls_verify: "{{ monitoring_write_instance_dev | ternary('off', 'on') }}"
+
 # Set the below in the consumer to put some additional scrape configs in place
 monitoring_scrape_configs: {}
+# Same as scrape config, but for fluent-bit
+monitoring_log_configs: {}
 
 monitoring_vmagent_config_dir: /etc/vmagent
 

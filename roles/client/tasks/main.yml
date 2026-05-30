@@ -45,7 +45,7 @@
   ansible.builtin.lineinfile:
     path: /etc/hosts
     search_string: "{{ line_comment }}"
-    line: "{{ monitoring_metrics_write_host_ip }} {{ monitoring_metrics_write_hostname }} {{ line_comment }}"
+    line: "{{ monitoring_metrics_write_host_ip }} {{ monitoring_metrics_write_hostname }} {{ monitoring_logs_write_hostname }} {{ line_comment }}"
   vars:
     line_comment: "# monitoring write host"
   when: "monitoring_metrics_write_host_ip != ''"
@@ -75,3 +75,6 @@
     group: vic_vm_agent
     mode: 0600
   no_log: true
+
+- name: Set up fluent bit
+  ansible.builtin.import_tasks: fluentbit.yml

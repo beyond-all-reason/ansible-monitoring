@@ -1,0 +1,42 @@
+pipeline:
+  filters:
+    - name: record_modifier
+      match: "*"
+      record:
+        - hostname ${HOSTNAME}
+
+    - name:  lua
+      match: "*"
+      call:  append_tag
+      code:  |
+          function append_tag(tag, timestamp, record)
+             new_record = record
+             new_record["tag"] = tag
+             return 1, timestamp, new_record
+          end
+
+  outputs:
+    # uncomment that output when debugging
+    # - name: stdout
+    #   match: "*"
+
+    - name: http
+      match: "*"
+      host: "{{ domain_name_victorialogs }}"
+      port: 443
+      http_user: "{{ monitoring_logs_write_user }}"
+      http_passwd: "${HTTP_PASSWORD}"
+      tls: "on"
+      tls.verify: "{{ monitoring_logs_tls_verify }}"
+      tls.vhost: "{{ domain_name_victorialogs }}"
+      uri: "/insert/jsonline?_stream_fields=stream&_msg_field=message&_time_field=date"
+      format: json_lines
+      json_date_format: iso8601
+
+# this is only used for curl localhost:2020/api/v2/reload
+# to check if the hot reload works (it counts the number of hot reload)
+service:
+  http_server: on
+  http_listen: 127.0.0.1
+  http_port: 2020
+  hot_reload: on
