@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+
+DATE=$(date +%Y%m%d-%H%M%S)
+BACKUP_DB="/tmp/grafana-backup-${DATE}.db"
+BACKUP_FILE="${BACKUP_DB}.gz"
+
+trap 'rm -f "${BACKUP_DB}" "${BACKUP_FILE}"' EXIT
+
+MOUNTPOINT=$(podman volume inspect grafana_data --format {% raw %}'{{.Mountpoint}}'{% endraw %})
+sqlite3 "${MOUNTPOINT}/grafana.db" ".backup ${BACKUP_DB}"
+gzip "${BACKUP_DB}"
+
+set +e
+FAILED=0
+{% for remote in grafana_backup_remotes %}
+if ! rclone --config /etc/rclone/rclone.conf copy "${BACKUP_FILE}" "{{ remote.name }}:{{ remote.bucket }}/grafana/"; then
+    echo "ERROR: Upload to remote '{{ remote.name }}' failed" >&2
+    FAILED=1
+fi
+{% endfor %}
+
+exit "${FAILED}"

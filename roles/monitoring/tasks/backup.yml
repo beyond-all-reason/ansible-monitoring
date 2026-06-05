@@ -1,0 +1,65 @@
+---
+- name: Create rclone config directory
+  ansible.builtin.file:
+    path: /etc/rclone
+    state: directory
+    mode: "0700"
+
+- name: Write remote credentials files
+  ansible.builtin.copy:
+    dest: "/etc/rclone/{{ item.name }}.json"
+    content: "{{ item.credentials_file_content }}"
+    mode: "0600"
+  loop: "{{ grafana_backup_remotes }}"
+  when: item.credentials_file_content is defined
+  no_log: true
+
+- name: Write rclone config
+  ansible.builtin.template:
+    src: rclone.conf.j2
+    dest: /etc/rclone/rclone.conf
+    mode: "0600"
+  no_log: true
+
+- name: Write grafana backup script
+  ansible.builtin.template:
+    src: grafana-backup.sh.j2
+    dest: /usr/local/sbin/grafana-backup
+    mode: "0750"
+
+- name: Create grafana-backup systemd service unit
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/grafana-backup.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Grafana database backup
+      After=grafana.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/grafana-backup
+
+- name: Create grafana-backup systemd timer
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/grafana-backup.timer
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Daily Grafana database backup
+
+      [Timer]
+      OnCalendar={{ grafana_backup_schedule }}
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+  notify: Restart grafana-backup timer
+
+- name: Enable and start grafana-backup timer
+  ansible.builtin.systemd_service:
+    name: grafana-backup.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+

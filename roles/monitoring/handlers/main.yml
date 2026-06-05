@@ -27,3 +27,8 @@
   ansible.builtin.systemd_service:
     name: oauth2proxy.service
     state: restarted
+- name: Restart grafana-backup timer
+  ansible.builtin.systemd_service:
+    name: grafana-backup.timer
+    state: restarted
+    daemon_reload: true
