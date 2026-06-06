@@ -16,6 +16,8 @@
       - man
       - nano
       - podman
+      - rclone
+      - sqlite3
       - tmux
       - ufw
       - unattended-upgrades

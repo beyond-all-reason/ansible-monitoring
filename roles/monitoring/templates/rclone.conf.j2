@@ -1,0 +1,5 @@
+{% for remote in grafana_backup_remotes %}
+[{{ remote.name }}]
+{{ remote.rclone_config | trim }}
+
+{% endfor %}

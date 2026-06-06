@@ -8,6 +8,10 @@
 - name: Set up containers
   ansible.builtin.import_tasks: containers.yml
   tags: containers
+- name: Set up backups
+  ansible.builtin.import_tasks: backup.yml
+  when: grafana_backup_enabled
+  tags: backup
 - name: Attach client montoring
   ansible.builtin.import_role:
     name: client
