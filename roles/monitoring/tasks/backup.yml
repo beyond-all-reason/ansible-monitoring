@@ -19,7 +19,6 @@
     src: rclone.conf.j2
     dest: /etc/rclone/rclone.conf
     mode: "0600"
-  no_log: true
 
 - name: Write grafana backup script
   ansible.builtin.template:
@@ -50,6 +49,7 @@
 
       [Timer]
       OnCalendar={{ grafana_backup_schedule }}
+      RandomizedDelaySec=5m
       Persistent=true
 
       [Install]
@@ -62,4 +62,3 @@
     enabled: true
     state: started
     daemon_reload: true
-

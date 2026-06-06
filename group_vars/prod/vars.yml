@@ -13,10 +13,13 @@ grafana_role_attribute_path: "contains(groups[*], 'beyond-all-reason:monitoring-
 monitoring_write_instance_dev: false # for the client role
 monitoring_metrics_write_password: "{{ vault_metrics_write_password_raw }}"
 grafana_backup_enabled: true
+grafana_backup_schedule: "0/8:00"
 grafana_backup_remotes:
   - name: primary
-    bucket: "grafana-backups"
+    path: "{{ vault_grafana_backup_primary_path }}"
     rclone_config: |
       type = gcs
       service_account_file = /etc/rclone/primary.json
+      no_check_bucket = true
+      bucket_policy_only = true
     credentials_file_content: "{{ vault_grafana_backup_primary_credentials }}"
