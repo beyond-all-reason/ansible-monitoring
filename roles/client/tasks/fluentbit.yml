@@ -17,9 +17,9 @@
     signed_by: /usr/share/keyrings/fluentbit-keyring.key
 
 - name: Install Fluent Bit package
-  ansible.builtin.package:
-    name:
-      - fluent-bit
+  ansible.builtin.apt:
+    name: fluent-bit
+    update_cache: true
 
 - name: Create service override directory
   ansible.builtin.file:

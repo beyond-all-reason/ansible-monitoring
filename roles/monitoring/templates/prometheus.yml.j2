@@ -17,3 +17,7 @@ scrape_configs:
   static_configs:
   - targets:
     - victoriametrics.dns.podman:8428
+- job_name: victorialogs
+  static_configs:
+  - targets:
+    - victorialogs.dns.podman:9428

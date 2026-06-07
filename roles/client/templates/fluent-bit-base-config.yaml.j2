@@ -1,4 +1,9 @@
 pipeline:
+  # Simplest possible input, helps verify all works as expected
+  inputs:
+    - name: fluentbit_logs
+      tag: fluentbit.internal.logs
+
   filters:
     - name: record_modifier
       match: "*"
@@ -40,3 +45,4 @@ service:
   http_listen: 127.0.0.1
   http_port: 2020
   hot_reload: on
+  log_level: warn
