@@ -223,3 +223,28 @@
     enabled: true
     state: started
     daemon_reload: true
+
+# VictoriaLogs
+- name: Set up VictoriaLogs container
+  containers.podman.podman_container:
+    name: victorialogs
+    state: quadlet
+    image: docker.io/victoriametrics/victoria-logs:v1.50.0
+    volumes:
+      - "victorialogs_data:/data:idmap"
+    command: -storageDataPath=/data
+    network: priv.network
+    quadlet_options:
+      - "AutoUpdate=registry"
+      - "Pull=newer"
+      - "UserNS=auto"
+      - |
+        [Install]
+        WantedBy=default.target
+  notify: Restart VictoriaLogs
+- name: Start and enable VictoriaLogs service
+  ansible.builtin.systemd_service:
+    name: victorialogs.service
+    enabled: true
+    state: started
+    daemon_reload: true

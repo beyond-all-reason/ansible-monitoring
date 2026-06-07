@@ -5,5 +5,6 @@ grafana_backup_schedule: "*-*-* 03:00:00"
 grafana_backup_remotes: []
 oauth2proxy_oauth_client_id: "oauth2proxy"
 metrics_write_user: "metrics"
+logs_write_user: "logs"
 dex_local_admin: false
 dex_github: false

@@ -1,0 +1,89 @@
+---
+
+- name: Install Fluent Bit gpg key
+  ansible.builtin.get_url:
+    url: "https://packages.fluentbit.io/fluentbit.key"
+    dest: /usr/share/keyrings/fluentbit-keyring.key
+    checksum: "sha256:df248e2d7103ca62cb683c20a077198d0fb0a7f79dbf53a604af0317de3b4711"
+
+- name: Install Fluent Bit repo
+  ansible.builtin.deb822_repository:
+    name: fluentbit
+    types: deb
+    uris: "https://packages.fluentbit.io/debian/{{  ansible_facts['distribution_release'] }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components:
+      - main
+    signed_by: /usr/share/keyrings/fluentbit-keyring.key
+
+- name: Install Fluent Bit package
+  ansible.builtin.apt:
+    name: fluent-bit
+    update_cache: true
+
+- name: Create service override directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/fluent-bit.service.d
+    state: directory
+    mode: "0755"
+
+- name: Create Fluent Bit config directory
+  ansible.builtin.file:
+    path: /opt/fluent-bit/config
+    state: directory
+    mode: "0755"
+
+- name: Fluent Bit env vars (sensitive)
+  ansible.builtin.template:
+    src: fluent-bit.env.j2
+    dest: /opt/fluent-bit/config/fluent-bit.env
+    mode: "0600"
+  notify: Restart fluentbit
+  no_log: true
+
+- name: Fluent Bit service override
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/fluent-bit.service.d/override.conf
+    mode: "0644"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/opt/fluent-bit/bin/fluent-bit -c /opt/fluent-bit/config.yaml
+      ExecReload=/bin/kill -HUP $MAINPID
+      EnvironmentFile=/opt/fluent-bit/config/fluent-bit.env
+  notify: Restart fluentbit
+
+- name: Create Fluent Bit data directory
+  ansible.builtin.file:
+    path: /var/lib/fluent-bit/
+    state: directory
+    mode: "0755"
+
+- name: Write Fluent Bit configs
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "/opt/fluent-bit/{{ item.dest_name }}"
+    mode: "0644"
+  notify: Reload fluentbit
+  loop: "{{ configs }}"
+  vars:
+    configs:
+      - template: fluent-bit-config.yaml.j2
+        dest_name: config.yaml
+      - template: fluent-bit-base-config.yaml.j2
+        dest_name: base-config.yaml
+
+- name: Write Fluent Bit config
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "/opt/fluent-bit/config/{{ item.dest_name }}"
+    mode: "0644"
+  notify: Reload fluentbit
+  loop: "{{ monitoring_log_configs.fluent_bit | default([]) }}"
+
+- name: Start and enable Fluent Bit service
+  ansible.builtin.systemd_service:
+    name: fluent-bit.service
+    enabled: true
+    state: started
+    daemon_reload: true
