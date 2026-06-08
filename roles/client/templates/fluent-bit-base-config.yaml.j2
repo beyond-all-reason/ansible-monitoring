@@ -27,13 +27,13 @@ pipeline:
 
     - name: http
       match: "*"
-      host: "{{ domain_name_victorialogs }}"
+      host: "{{ monitoring_logs_write_hostname }}"
       port: 443
       http_user: "{{ monitoring_logs_write_user }}"
       http_passwd: "${HTTP_PASSWORD}"
       tls: "on"
       tls.verify: "{{ monitoring_logs_tls_verify }}"
-      tls.vhost: "{{ domain_name_victorialogs }}"
+      tls.vhost: "{{ monitoring_logs_write_hostname }}"
       uri: "/insert/jsonline?_stream_fields=stream&_msg_field=message&_time_field=date"
       format: json_lines
       json_date_format: iso8601
