@@ -10,6 +10,11 @@ pipeline:
       record:
         - hostname ${HOSTNAME}
 
+    - name: record_modifier
+      match: fluentbit.internal.logs
+      record:
+        - stream fluent-bit
+
     - name:  lua
       match: "*"
       call:  append_tag
@@ -34,7 +39,8 @@ pipeline:
       tls: "on"
       tls.verify: "{{ monitoring_logs_tls_verify }}"
       tls.vhost: "{{ monitoring_logs_write_hostname }}"
-      uri: "/insert/jsonline?_stream_fields=stream&_msg_field=message&_time_field=date"
+      # `stream` should be something like name of service that ships logs
+      uri: "/insert/jsonline?_stream_fields=hostname,stream&_msg_field=message&_time_field=date"
       format: json_lines
       json_date_format: iso8601
 
