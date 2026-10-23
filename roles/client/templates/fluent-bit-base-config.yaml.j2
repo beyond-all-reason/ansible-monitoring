@@ -31,7 +31,9 @@ pipeline:
     #   match: "*"
 
     - name: http
+      alias: victorialogs
       match: "*"
+      retry_limit: 7
       host: "{{ monitoring_logs_write_hostname }}"
       port: 443
       http_user: "{{ monitoring_logs_write_user }}"
@@ -43,12 +45,16 @@ pipeline:
       uri: "/insert/jsonline?_stream_fields=hostname,stream&_msg_field=message&_time_field=date"
       format: json_lines
       json_date_format: iso8601
+      compress: zstd
 
-# this is only used for curl localhost:2020/api/v2/reload
-# to check if the hot reload works (it counts the number of hot reload)
 service:
   http_server: on
   http_listen: 127.0.0.1
   http_port: 2020
   hot_reload: on
   log_level: warn
+  # Those parameters might require some tuning
+  flush: 2
+  flush.adaptive: on
+  flush.adaptive.min_interval: 1
+  flush.adaptive.max_interval: 5

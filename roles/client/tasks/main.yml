@@ -40,6 +40,14 @@
           relabel_configs:
             - target_label: instance
               replacement: "{{ ansible_hostname }}"
+      10_fluent_bit:
+        - job_name: fluent-bit
+          static_configs:
+            - targets:
+                - http://127.0.0.1:2020/api/v2/metrics/prometheus
+          relabel_configs:
+            - target_label: instance
+              replacement: "{{ ansible_hostname }}"
   notify: Restart vmagent
 - name: Set write host ip
   ansible.builtin.lineinfile:
