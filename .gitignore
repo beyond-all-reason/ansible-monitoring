@@ -1,3 +1,7 @@
 .vscode
 .incus-integration-on
 .ansible
+.python-version
+.venv
+__pycache__
+*.pyc
