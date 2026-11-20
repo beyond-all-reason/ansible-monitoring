@@ -6,5 +6,5 @@ readme: README.md
 authors:
   - BAR Team
 dependencies:
-  "victoriametrics.cluster": "==2.50.4"
-  "prometheus.prometheus": "==0.30.0"
+  "victoriametrics.cluster": "==2.58.0"
+  "prometheus.prometheus": "==0.30.2"

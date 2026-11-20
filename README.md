@@ -48,10 +48,12 @@ flowchart LR
 
 #### Dependencies
 
+Ansible is managed via [uv](https://docs.astral.sh/uv/). Make sure you have `uv` installed and prefix Ansible commands with `uv run`.
+
 Make sure required collections are installed by running:
 
 ```
-ansible-galaxy collection install -r requirements.yml
+uv run sync-collections
 ```
 
 If you pull repo and there are changes to that file, you need to rerun the command to make sure you pick up latest changes.
@@ -67,7 +69,7 @@ For running the playbook against the prod instances, you will need the vault pas
 Currently there is only one playbook that sets up the whole server. You can run it against the `main` instance to check if everything is up to date with:
 
 ```
-ansible-playbook -l main play.yml --check --diff
+uv run ansible-playbook -l main play.yml --check --diff
 ```
 
 Then drop the `--check` flag to actually apply the changes.
@@ -90,7 +92,7 @@ incus exec bar-mon-test -- cloud-init status --wait
 Then test that it works for ansible:
 
 ```
-ansible dev -m shell -a 'uname -a'
+uv run ansible dev -m shell -a 'uname -a'
 ```
 
 The test container runs a few different services, and depends on a few `*.bar-mon.local` domain names pointing at the incus container so they are independently routable from web browser. Easiest is to add a new entry in `/etc/hosts` like:
@@ -102,7 +104,7 @@ The test container runs a few different services, and depends on a few `*.bar-mo
 you can add/update it with:
 
 ```
-ansible ,localhost -b -K -m lineinfile -a "path=/etc/hosts regexp='.*bar-mon.*' line='$(ansible-inventory --host test | jq -r '.ansible_host') id.bar-mon.local grafana.bar-mon.local metrics.bar-mon.local logs.bar-mon.local'"
+uv run ansible ,localhost -b -K -m lineinfile -a "path=/etc/hosts regexp='.*bar-mon.*' line='$(uv run ansible-inventory --host test | jq -r '.ansible_host') id.bar-mon.local grafana.bar-mon.local metrics.bar-mon.local logs.bar-mon.local'"
 ```
 
 ### Usage
@@ -110,13 +112,13 @@ ansible ,localhost -b -K -m lineinfile -a "path=/etc/hosts regexp='.*bar-mon.*' 
 Now you can use all the playbooks and roles as usual, just make sure you are targeting the `dev` inventory group or `test` host. For example:
 
 ```
-ansible-playbook -l dev play.yml
+uv run ansible-playbook -l dev play.yml
 ```
 
 You can ssh into it with something like:
 
 ```
-ssh -i test.ssh.key ansible@$(ansible-inventory --host test | jq -r '.ansible_host')
+ssh -i test.ssh.key ansible@$(uv run ansible-inventory --host test | jq -r '.ansible_host')
 ```
 
 Or enter directly into root container shell with:
